@@ -1,0 +1,225 @@
+---
+title: "ClusterAnalysis-HierarchicalMethod"
+author: "Ben Renne"
+date: "11 11 2020"
+output: html_document
+---
+### Load Libraries and set working directory
+```{r Load Packages}
+file_base <- "C:/Users/tamta/Documents/Studium/02_Master/17_Masterarbeit/03_Data/"
+
+library(forcats)
+library(ecodist)
+library(tidyverse)
+library(cluster)
+library(factoextra)
+library(dendextend)
+library(magrittr)
+```
+
+### Create test data
+```{r Create Data}
+alter <- c(43, 38, 6, 47, 37, 9)
+```
+
+### Perform the Hierarchical Cluster Analysis
+First the distance matrix is calculated. Then, a hierarchical clustering analysis is performed. The method allows among others the choice between the single-linkage method, the complete-linkage method and the average-linkage method.
+```{r Cluster Analysis 1}
+#calculate the discance matrix
+d <- dist(alter)
+#upper half of the distance matrix
+d
+```
+
+```{r Cluster Analysis 2}
+#hierarchical clustering analysis
+e <- hclust(d, method = "complete", members = NULL)
+```
+
+### Understand the cluster results
+The results of the cluster analysis can be called using the *Dollar* sign.
+To see how the data is melt together into groups, the **$merge** command show insights. If The row names show the melting levels, the column names the first and second melted element respectively. A negative sign indicates a melting of two objects, a positive sign a melting of two groups (already contain more than one object and are created by melting together two or more objects).  
+```{r Results 1}
+e$merge
+```
+
+To find out at what distance the objects are melt together, the **$height** command has to be called.
+```{r Results 2}
+e$height
+```
+
+When it comes to drawing a Dendrogram, the command **$order** indicates in which order the elements have to be drawn that no overlapping would occure. 
+```{r Results 3}
+e$order
+```
+
+A Dendrogram itself could be plotted using the following code.
+```{r Results 4, warning=FALSE}
+plot(e)
+```
+
+### Quality of the results
+To evaluate the quality of the generated hierarchical cluster, a cophenetic distance matrix is used and later compared with the full distance matrix (not the half one presented above). To ensure a correct formatting (which is readable in R), the distance matrix has to be transformed. 
+```{r Quality Assessment}
+#generating a cophenetic distance matrix
+coph <- cophenetic(e)
+
+#create  full distance matrices for distance matrix and cophenetic distance matrix
+dm <- ecodist::full(d)
+coph <- full(coph)
+```
+
+The two matrices can be used to calculate an empirical correlation coefficient. To do so, a comparison of the full distance matrix and the cophenetic matrix is performed.
+```{r Correlation}
+#use the values in the lower triangle of the matrices
+cor(dm[lower.tri(dm)], coph[lower.tri(coph)])
+```
+
+Another method for controlling the results accuracy is the calculation of the Gamma coefficient. Where the Gamma values can be interpreted as follows:
+
+- G >= 0.9 Very good
+- G >= 0.8 Good
+- G >= 0.7 Fair
+- G >= 0.6 Sufficient (*ausreichend*)
+- G <  0.6 Poor
+```{r Gamma Coefficient}
+#gamma coefficient
+gammakoeffizient <- function(v1, v2){
+  m1 <- outer(v1, v1, FUN = "<")
+  m1 <- m1[lower.tri(m1)]
+  m2 <- outer(v2, v2, FUN = "<")
+  m2 <- m2[lower.tri(m2)]
+  m3 <- outer(v1, v1, FUN = ">")
+  m3 <- m3[lower.tri(m3)]
+  m4 <- outer(v2, v2, FUN = ">")
+  m4 <- m4[lower.tri(m4)]
+  C <- sum((m1 + m2) == 2)
+  C <- C + sum((m3 + m4) == 2)
+  D <- sum((m1 + m4) == 2)
+  D <- D + sum((m2 + m3) == 2)
+  (C - D)/(C + D)
+}
+
+gammakoeffizient(dm[lower.tri(dm)], coph[lower.tri(coph)])
+```
+
+A third option is to use the *Mojena Test*. It standardize the values and uses a threshold of 1.25 to test how many cluster classes are adequat.
+```{r Mojena Test}
+1+sum((e$height-mean(e$height))/sqrt(e$height)>1.25)
+```
+
+### Visual interpretation
+To get a first idea, of how the data is grouped, the result can be visualized with a dendrogram (shown above) and the groups can be marked using the largest height difference.
+```{r boxes}
+plot(e)
+rect.hclust(e, k = 2, border = 2:4)
+```
+
+The visual interpretation can be supported by a so-called stair plot (*Treppenplot*). It visualizes the melting levels and the number difference that lies between the unique values of the data.
+```{r stair plot}
+eh <- e$height
+
+#first tick
+plot(rep(1,2),c(0,eh[1]),xaxt="n",yaxt="n",xlim=c(0,length(alter)),
+     xaxs="i",yaxs="i",ylim=c(0,50),type="l",
+     xlab="Group number",ylab="Melting level")
+#horizontal lines
+for(i in 2:5) lines(c(i,i),c(eh[i-1],eh[i]))
+#vetical lines
+for (i in seq(1:(length(eh)-1))) lines(c(i,i+1),rep(eh[i],2))
+#x axis ticks
+axis(1,at=0:5,labels=6:1)
+#y axis ticks
+axis(2, at = seq(0,50,5), labels = seq(0,50,5))
+```
+
+### Find out which group number is most appropriate (only possible for 2D data)
+To use the methods, presented in this section, more complex 2D data (dataframe) is necessary. It can used like the 1D data presented above, like using **hclust(df)** or **dist(df)**.
+```{r 2d data intro}
+#data of arrests and population density in the USA.
+df <- USArrests %>% na.omit() %>% scale()
+head(df)
+```
+#### 1. Ellbow method
+One simple way of testing which group number is appropriate is using the *Ellbow Method*. To do so, the total within-cluster sum of square (wss) has to be as small as possible. The implemented method is presented below.
+```{r elbow}
+fviz_nbclust(df, FUN = hcut, method = "wss")
+```
+
+The result suggests "breaks" at 2 and at 4 classes. That's where the trend of the data points before and after are disturbed.
+
+#### 2. Average Silhouette method  
+Similar to the presented silhouette plot above, the silhouette method uses the distance between the groups and the within variability. As higher the value, as better.
+```{r sil}
+fviz_nbclust(df, FUN = hcut, method = "silhouette")
+```
+
+The result suggests "breaks" at 2 and at 4 classes, although 2 classes are the main maxima and 4 classes are the second optimal maxima.
+
+#### 3. Gap statistic method
+The gap statistics compares the within-group distance with a distribution that is not clustered. The deviation is presented as gap. As larger the gap value, as more appropriate the group is identified.
+```{r gap}
+gap_stat <- clusGap(df, FUN = hcut, nstart = 25, K.max = 10, B = 50)
+fviz_gap_stat(gap_stat)
+```
+
+As well, the best fit is made with 4 classes.
+
+
+### Overview categorized variables
+Back to 1D data:  
+To find out to which groups the data values are assigned, the group number can  be derived in the next steps.
+```{r Group allocation 1, eval=FALSE}
+#allocate the groups to the data values
+welche.cluster <- function(anz, hierar){
+  co <- full(cophenetic(hierar))
+  h <- hierar$height[length(hierar$height) + 1 - anz]
+  n <- ncol(co)
+  cl <- rep(0, n)
+  k <- 1
+  for(i in 1:n) {
+    if(cl[i] == 0) {
+      ind <- (1:n)[co[i, ] <= h]
+      cl[ind] <- k
+      k <- k + 1
+    }
+  }
+  cl
+}
+# fill in the number of distinctive groups and the data
+welche.cluster(hierar = e, anz = 2)
+print("Respective data values:")
+print(alter)
+```
+
+```{r Group Allocation 2, echo=FALSE}
+welche.cluster <- function(anz, hierar){
+  co <- full(cophenetic(hierar))
+  h <- hierar$height[length(hierar$height) + 1 - anz]
+  n <- ncol(co)
+  cl <- rep(0, n)
+  k <- 1
+  for(i in 1:n) {
+    if(cl[i] == 0) {
+      ind <- (1:n)[co[i, ] <= h]
+      cl[ind] <- k
+      k <- k + 1
+    }
+  }
+  cl
+}
+
+welche.cluster(hierar = e, anz = 2)
+print("Respective data values:")
+print(alter)
+```
+
+### Reference
+The documentation is based on:
+
+- Handl, A., & Kuhlenkasper, T. (2017). Multivariate Analysemethoden. https://doi.org/10.1007/978-3-662-54754-0 (Kapitel 13 - Clusteranalyse)
+
+Information on how to use more complex data is presented here:
+
+- UC Business Analytics R Programming Guide (2020): K-means Cluster Analysis. https://uc-r.github.io/kmeans_clustering
+
