@@ -76,7 +76,7 @@ divideBy("f")
 def divideBy(number):
     try:
         return 10/number
-    except :
+    except:
         print("Something went wrong.")
         
 divideBy(2)
