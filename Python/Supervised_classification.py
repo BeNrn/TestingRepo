@@ -1,5 +1,5 @@
 #script to extract information from image map
-# path: C:\Users\tamta\Documents\Freizeit\Minecraft\images\MC_Karte.tiff
+# path: C:\Users\tamta\Documents\Freizeit\...
 # pixel size: 1268 x 924
 # mc-block size: 634 x 462
 # scale: 1:2

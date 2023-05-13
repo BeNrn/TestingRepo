@@ -80,4 +80,4 @@ plt.hist(band2.flatten(), bins = 50, fc=(0, 1, 0, 0.5))
 plt.hist(band3.flatten(), bins = 50, fc=(0, 0, 1, 0.5))
 
 
-https://earthpy.readthedocs.io/en/latest/gallery_vignettes/plot_rgb.html
+#https://earthpy.readthedocs.io/en/latest/gallery_vignettes/plot_rgb.html

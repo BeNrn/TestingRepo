@@ -45,8 +45,8 @@ def sum_up(number):
 
 sum_up(varB)
 
-#variable in a function can be defined as global, even if its assigned within a
-#   function, using the "global" statement
+#variable in a function can be defined as global, even if it is assigned within
+# a function, using the "global" statement
 
 def sum_up():
     global number
