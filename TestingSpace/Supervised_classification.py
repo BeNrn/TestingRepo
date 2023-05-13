@@ -1,4 +1,4 @@
-#script to extract information from little london map
+#script to extract information from image map
 # path: C:\Users\tamta\Documents\Freizeit\Minecraft\images\MC_Karte.tiff
 # pixel size: 1268 x 924
 # mc-block size: 634 x 462
