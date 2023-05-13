@@ -1,9 +1,7 @@
 # Testing Repository
-Repository to collect the information of my knowledge building process.
-
+Repository for all other scripts. It is a collection of test cases and experiments. 
 
 ### Current structure
-- Testing space
+- Python
   - Supervised classification
-- Knowledge base
-  - Jupyter Notebook
+  - Raster calculation
