@@ -4,6 +4,19 @@
 import rasterio
 import os
 import re
+from rasterio.plot import show  
+import matplotlib.pyplot as plt
+import numpy as np
+from rasterio.plot import show_hist
+import earthpy.spatial as es
+
+                
+# Function to normalize the grid values
+def normalize(array, minGlobal, maxGlobal):
+    """Normalizes numpy arrays into scale 0.0 - 1.0"""
+    #array_min, array_max = array.min(), array.max()
+    return ((array - minGlobal)/(maxGlobal - minGlobal))
+
 
 #paths
 baseDir = "E:\GIS-Datenbasis\Sentinel2_Schweden"
@@ -23,7 +36,7 @@ with rasterio.open(os.path.join(dataDir, dataList[0])) as rasterMeta:
 meta.update(count = 3)
 
 #creating a raster stack
-with rasterio.open(stackDir, "w", **meta) as rasterStack:
+with rasterio.open(stackDir, "w", **meta) as rasterBand:
     #iterate over bands using enumerate -> returns elements in the form of
     # (1,band1), (2,band2)... which allows retrieving the index number and the 
     # element itself for processing (see how "id" and "layer" is used)
@@ -33,4 +46,38 @@ with rasterio.open(stackDir, "w", **meta) as rasterStack:
         # 5 (blue), thus only the band 2 to 4 should be included
         if re.search(".*B0[2-4]_10m.jp2",os.listdir(dataDir)[id]):
             with rasterio.open(layer) as rasterLayer:
-                rasterStack.write_band(id, rasterLayer.read(1))
+                rasterBand.write_band(id, rasterLayer.read(1))
+
+with rasterio.open(stackDir, "r") as rasterImage:
+    #print(rasterImage.transform)
+    #print(rasterImage.crs)
+    band1 = rasterImage.read(1)[0:500, 0:500]
+    band2 = rasterImage.read(2)[0:500, 0:500]
+    band3 = rasterImage.read(3)[0:500, 0:500]
+    
+    minList = (band1.min(), band2.min(), band3.min())
+    minGlobal = min(minList) 
+    maxList = (band1.max(), band2.max(), band3.max())
+    maxGlobal = max(maxList) 
+    
+    #https://python.plainenglish.io/how-to-normalize-a-raster-image-via-python-and-gdal-7238d0e2140f
+    nb1 = normalize(array = band1, minGlobal = minGlobal, maxGlobal = maxGlobal)
+    nb2 = normalize(array = band2, minGlobal = minGlobal, maxGlobal = maxGlobal)
+    nb3 = normalize(array = band3, minGlobal = minGlobal, maxGlobal = maxGlobal)
+    
+    plt.imshow(np.dstack(tup = (nb1, nb2, nb3)))
+    
+    #https://github.com/OSGeo/gdal/issues/5736
+    #show_hist(rasterImage, bins=50, lw=0.0, stacked=False, alpha=0.3,
+    #      histtype='stepfilled', title="Histogram")
+    
+    plt.imshow(rasterImage.read(2))
+    show(rasterImage)
+
+#histogram
+plt.hist(band1.flatten(), bins = 50, fc=(1, 0, 0, 0.5)) #color and opacity (Red, Green, Blue, A = opacity)
+plt.hist(band2.flatten(), bins = 50, fc=(0, 1, 0, 0.5))
+plt.hist(band3.flatten(), bins = 50, fc=(0, 0, 1, 0.5))
+
+
+https://earthpy.readthedocs.io/en/latest/gallery_vignettes/plot_rgb.html
