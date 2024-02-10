@@ -1,7 +1,8 @@
+# -*- coding: utf-8 -*-
 """
-Created: 07.10.2023
-Purpose: Rearange a CSV file.
-
+Purpose:    Rearange a CSV file.
+Created:    07.10.2023
+Author:     BeNrn
 """
 
 #libs
