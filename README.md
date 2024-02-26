@@ -4,6 +4,11 @@ Repository for all other scripts. It is a collection of test cases and experimen
 ### Current structure
 - Python
   - Supervised classification
+  - Data transformation
+      - CSV rearangement
+      - CAD to shape
+      - xy points to shape
+      - VCF file processing
   - Raster calculation
      - One processed layer
          - ![Raster_calculation-GreenBand](https://github.com/BeNrn/TestingRepo/assets/56606686/8b2dbab2-fe7f-4935-9f46-db7bc5b787f0)
