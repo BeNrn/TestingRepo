@@ -4,6 +4,18 @@ Purpose:    Trasform JSON to VCS (vCalendar-Format) resp. ICS file.
 Created:    24.11.2024
 Creator:    BeNrn 
 """
+#from https://github.com/eoleedi/TimeTree-exporter
+#go to https://timetreeapp.com/signin
+#open developer tools in the browser
+#go to networks tab
+#go to edits of the network tabs and select: Do not delete the logs
+#type in the search bar "sync"
+#sign in
+#the first file is called "sync" but it can only hold a specific amount of data
+# if it is more than that amount, more sync files will be generated being named something like "sync?since=16..."
+#store those files on your device
+#add the .json ending to each file
+# (open in VS Code, type in >Format Document)
 
 #import libs
 #-----------
@@ -114,6 +126,11 @@ with open(ouput_file_path, "w") as file:
         #file.write(vcs_event + "\n")
         file.write(vcs_event.replace("        ", ""))#remove white spaces
     file.write(footer)
+
+##########
+#bei outlook web anmelden
+# Kalender hinzufügen
+# from file
 
 #VCALENDAR KNOW HOW
 #https://karlrege.internet-box.ch/~rege/archive/dnet_hs13/dnet8/R25v33_understanding_vcal.pdf

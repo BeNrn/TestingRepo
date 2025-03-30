@@ -4,15 +4,17 @@ Purpose:    Read, process and write VCF contact file to readable text file.
 Created:    28.01.2024
 Author:     BeNrn
 """
+#information to VCF tags
+#https://de.wikipedia.org/wiki/VCard
 
 #set paths
 #---------
-vcfPath = r"C:\Users\tamta\Documents\Kontakte_SamsungHandy_05092022.vcf"
+vcfPath = r"C:\Users\tamta\Documents\contacts_2024_12_02_16_07_21.vcf"
 outFile = r"C:\Users\tamta\Documents\test.txt"
 
 #load data
 #----------
-with open(vcfPath, "r") as vcfFile:
+with open(vcfPath, "r", encoding="utf-8") as vcfFile:
     data = vcfFile.readlines()
 
 #remove unnecessary data and reformat
@@ -21,7 +23,8 @@ with open(vcfPath, "r") as vcfFile:
 # alter all subsequent indices. Thus, iterating from behind, the change in the 
 # index will only affect alrady passed items
 for element in reversed(data):
-    if not element.startswith(("N:", "TEL", "ADR", "BDAY", "NOTE")):
+    #if not element.startswith(("N:", "TEL", "ADR", "BDAY", "NOTE")):
+    if element.startswith(("BEGIN:", "VERSION:", "PRODID", "END:", "PHOTO:", " ", "FN:")):
         data.remove(element)
 
 #list to string
@@ -36,6 +39,13 @@ data = data.replace("'", "")
 #create list with entries for each contact
 data = data.split("+++")
 data = data[1:]
+
+#sort
+data.sort()
+#remove duplicates
+data = list(dict.fromkeys(data))
+
+data = [i for i in data if "TEL;" in i or "ADR;" in i or "EMAIL;;" in i or "BDAY;" in i] #only contacts that have a phone number or an e-mail address or address
 
 #iterate over each contact
 #-------------------------
@@ -81,13 +91,19 @@ for element in data:
                 
                 address = addressParts
             else:
-                address = entryParts[1] + " " + entryParts[3] + " " + entryParts[6] + " " + entryParts[4]
+                #address = entryParts[1] + " " + entryParts[3] + " " + entryParts[6] + " " + entryParts[4]
+                address = " ".join(entryParts[2:])
                 address = [address.strip()]
         if entryParts[0].strip().startswith("BDAY"):
             #BDAY:<YEAR>-<MONTH>;<DAY>
             birthday = entryParts[0].split(":")[1]
-            birthday = birthday.split("-")
-            birthdayFull = birthday[-1] + "." + birthday[2] + "." + birthday[0]
+            #format of YYYY-MM-DD
+            if len(birthday) == 10:
+                birthday = birthday.split("-")
+                birthdayFull = birthday[-1] + "." + birthday[2] + "." + birthday[0]
+            #format of YYYYMMDD
+            elif len(birthday) == 8:
+                birthdayFull = birthday[6:] + "." + birthday[4:6] + "." + birthday[:4]
         if entryParts[0].strip().startswith("NOTE"):
             if len(entryParts) > 1 and entryParts[1].startswith("ENCODING"):
                 noteString = entryParts[-1].split(":")[1] 
@@ -105,7 +121,7 @@ for element in data:
             
     #write to file
     #-------------
-    with open(outFile, "a") as file:
+    with open(outFile, "a", encoding="utf-8") as file:
         if fullName is not None:
             file.write(fullName + "\n")
         if telephoneNumber is not None:
