@@ -28,8 +28,8 @@ from reportlab.lib import colors
 
 #set current working directory and define as base path
 user_name = os.getlogin()
-os.chdir(r"PATH_TO_BASE".format(user_name))
-base_path = r"PATH_TO_BASE".format(user_name)
+os.chdir(r"C:\Users\{}\Documents\Freizeit\Geschenke\2025_Toms_Pflanzendatenbank".format(user_name))
+base_path = r"C:\Users\{}\Documents\Freizeit\Geschenke\2025_Toms_Pflanzendatenbank".format(user_name)
 database_path = os.path.join(base_path, "openDB.csv")
 
 #load functions
