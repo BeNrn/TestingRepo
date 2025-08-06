@@ -5,12 +5,19 @@ Created:    25.07.2025
 Author:     BeNrn
 """
 #https://realpython.com/python-dash/#style-your-dash-application
+#https://dash.plotly.com/dash-core-components/tabs (for the tabs)
+#start the dash Dashboard:
+#   - open CMD
+#   - activate python environment
+#   - cd to file location of this script
+#   - run > python OpenSourceDatabase_Dashboard.py
+#   - open the provided URL in a browser
 
 #load libs
 import pandas as pd
 import os
 
-from dash import Dash, Input, Output, dcc, html, dash_table
+from dash import Dash, Input, Output, dcc, html, dash_table, callback
 
 #load paths
 user_name = os.getlogin()
@@ -21,7 +28,7 @@ database_path = os.path.join(base_path, "openDB.csv")
 #load the data
 db_df = pd.read_csv(database_path, sep = ";")
 
-#image_name_list.apply(lambda url: f'<img src="/{url}" height="60">')
+#laod matching images (image name starts with Bild_ID)
 image_list = os.listdir(os.path.join(base_path, "assets"))
 
 image_name_list = []
@@ -37,28 +44,49 @@ db_df["Bild_path"] = image_name_list
 app = Dash(__name__)
 
 #set the style of the webpage
-app.layout = html.Div(
-    children=[
-        #add the heading
-        html.H1(children="Avocado Analytics"),
-        #add a paragraph
-        html.P(
-            children=(
-                "Analyze the behavior of avocado prices and the number"
-                " of avocados sold in the US between 2015 and 2018"
+#html.Div -> create a new division
+app.layout = html.Div([
+    #primary heading
+    html.H1(children="Toms Pflanzendatenbank"),
+    #introduce tabs
+    dcc.Tabs(id = "tabs", value = "tab_table", children=[
+        dcc.Tab(label="Tabelle", value = "tab_table"),
+        dcc.Tab(label="Dateneingabe", value = "tab_datainput"),
+        ]),
+        html.Div(id="database")
+    ])
+
+#controls the tabs, based on user input
+@callback(Output("database", 'children'),
+              Input('tabs', 'value'))
+
+def render_content(tab):
+    if tab == 'tab_table':
+        return html.Div([
+            html.H1(children="Pflanzentabelle"),
+            #add a paragraph
+            html.P(
+                children=(
+                    "Analyze the behavior of avocado prices and the number"
+                    " of avocados sold in the US between 2015 and 2018"
+                ),
             ),
-        ),
-        #https://dash.plotly.com/datatable
-        dash_table.DataTable( 
-            data = db_df.to_dict('records'),
-            columns = [{'name': col, 'id': col, 'presentation': 'markdown'} for col in db_df.columns],
-            style_table = {'overflowX': 'auto'},
-            style_cell = {'textAlign': 'left'},
-            style_data={'whiteSpace': 'normal', 'height': 'auto'},
-            markdown_options={'html': True}
-        )
-    ]
-)
+            #https://dash.plotly.com/datatable
+            dash_table.DataTable( 
+                data = db_df.to_dict('records'),
+                columns = [{'name': col, 'id': col, 'presentation': 'markdown'} for col in db_df.columns],
+                style_table = {'overflowX': 'auto'},
+                style_cell = {'textAlign': 'left'},
+                style_data={'whiteSpace': 'normal', 'height': 'auto'},
+                markdown_options={'html': True}
+            )
+        ])
+    elif tab == 'tab_datainput':
+        return html.Div([
+            html.H3("Dateneingabe"),
+            #list(db_df) -> hier für jede Überschrift einen Block einfügen
+            dcc.Input(id='input-name', type='text', placeholder='Name'),
+        ])
 
 #run the app
 if __name__ == "__main__":
@@ -67,9 +95,9 @@ if __name__ == "__main__":
     
     
     
-# Gute Frage! In **Dash** kannst du Dateneingabe machen, indem du **Input-Komponenten** wie `dcc.Input`, `dcc.Dropdown` oder `dash_table.DataTable` (editierbar!) verwendest. Unten zeige ich dir zwei gängige Methoden:
+#Dateneingabe in Dash: 
+# - Input-Komponenten wie `dcc.Input`, `dcc.Dropdown` oder `dash_table.DataTable` (editierbar!)
 
-# ---
 
 # ## ✅ **Variante 1: Dateneingabe mit `dcc.Input` Feldern**
 
@@ -78,53 +106,53 @@ if __name__ == "__main__":
 # ### 🧪 Beispiel:
 
 # ```python
-# import dash
-# from dash import dcc, html, Input, Output, State
-# import dash_table
-# import pandas as pd
+import dash
+from dash import dcc, html, Input, Output, State
+import dash_table
+import pandas as pd
 
-# # Start-Daten
-# df = pd.DataFrame(columns=["Name", "Alter", "Beruf"])
+# Start-Daten
+df = pd.DataFrame(columns=["Name", "Alter", "Beruf"])
 
-# # App initialisieren
-# app = dash.Dash(__name__)
+# App initialisieren
+app = dash.Dash(__name__)
 
-# app.layout = html.Div([
-#     html.H2("Person hinzufügen"),
+app.layout = html.Div([
+    html.H2("Person hinzufügen"),
 
-#     # Eingabefelder
-#     dcc.Input(id='input-name', type='text', placeholder='Name'),
-#     dcc.Input(id='input-age', type='number', placeholder='Alter'),
-#     dcc.Input(id='input-job', type='text', placeholder='Beruf'),
-#     html.Button('Hinzufügen', id='add-button', n_clicks=0),
+    # Eingabefelder
+    dcc.Input(id='input-name', type='text', placeholder='Name'),
+    dcc.Input(id='input-age', type='number', placeholder='Alter'),
+    dcc.Input(id='input-job', type='text', placeholder='Beruf'),
+    html.Button('Hinzufügen', id='add-button', n_clicks=0),
     
-#     html.Hr(),
+    html.Hr(),
 
-#     # Tabelle zur Anzeige
-#     dash_table.DataTable(
-#         id='data-table',
-#         columns=[{'name': col, 'id': col} for col in df.columns],
-#         data=df.to_dict('records')
-#     )
-# ])
+    # Tabelle zur Anzeige
+    dash_table.DataTable(
+        id='data-table',
+        columns=[{'name': col, 'id': col} for col in df.columns],
+        data=df.to_dict('records')
+    )
+])
 
-# # Callback zum Hinzufügen von Daten
-# @app.callback(
-#     Output('data-table', 'data'),
-#     Input('add-button', 'n_clicks'),
-#     State('input-name', 'value'),
-#     State('input-age', 'value'),
-#     State('input-job', 'value'),
-#     State('data-table', 'data'),
-#     prevent_initial_call=True
-# )
-# def add_row(n_clicks, name, age, job, current_data):
-#     if name and age and job:
-#         current_data.append({'Name': name, 'Alter': age, 'Beruf': job})
-#     return current_data
+# Callback zum Hinzufügen von Daten
+@app.callback(
+    Output('data-table', 'data'),
+    Input('add-button', 'n_clicks'),
+    State('input-name', 'value'),
+    State('input-age', 'value'),
+    State('input-job', 'value'),
+    State('data-table', 'data'),
+    prevent_initial_call=True
+)
+def add_row(n_clicks, name, age, job, current_data):
+    if name and age and job:
+        current_data.append({'Name': name, 'Alter': age, 'Beruf': job})
+    return current_data
 
-# if __name__ == '__main__':
-#     app.run_server(debug=True)
+if __name__ == '__main__':
+    app.run_server(debug=True)
 # ```
 
 # ---
