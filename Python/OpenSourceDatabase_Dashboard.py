@@ -13,6 +13,13 @@ Updated:    10.08.2025
 #   - cd to file location of this script
 #   - run > python OpenSourceDatabase_Dashboard.py
 #   - open the provided URL in a browser
+# 
+#Functions
+#   [x] Show the data table with the images
+#   [x] import data (append at the bottom)
+#   [-] delete data by id
+#   [-] add column
+#   [-] remove column
 
 #load libs
 import pandas as pd
@@ -60,7 +67,7 @@ app.layout = html.Div([
     #introduce tabs
     dcc.Tabs(id = "tabs", value = "tab_table", children=[
         dcc.Tab(label="Tabelle", value = "tab_table"),
-        dcc.Tab(label="Dateneingabe", value = "tab_datainput"),
+        dcc.Tab(label="Datenänderung", value = "tab_datainput"),
         ]),
         html.Div(id="database")
     ])
@@ -110,7 +117,10 @@ def render_content(tab):
     #tab 2
     elif tab == 'tab_datainput':
         return html.Div([
+            #data row input
+            #---------------
             html.H3("Dateneingabe"),
+            html.P("Bitte die Daten eingeben, die hinzugefügt werden sollen. Die Spalte 'Bild_ID' ist ein Pflichtfeld."),
             #list comprehension for each column in the df to dynamically depict 
             # df input fields
             html.Div([
@@ -123,6 +133,22 @@ def render_content(tab):
             ]),
             #save button
             html.Button('Speichern', id='save_button'),
+            #row deletion
+            #--------------
+            html.H3("Zeile löschen"),
+            html.P("Bitte die ID der Zeile eingeben, die gelöscht werden soll."),
+            dcc.Input(id = "column_deletion_id", type = "text", placeholder = "Zeilen ID", value = None),
+            #column add
+            #----------
+            html.H3("Spalte hinzufügen"),
+            html.P("Bitte den neu hinzuzufügenden Feldnamen angeben."),
+            dcc.Input(id = "column_addition_id", type = "text", placeholder = "Spaltenname", value = None),
+            #column deletion
+            #---------------
+            html.H3("Spalte löschen"),
+            html.P("Bitte den Spaltennamen angeben, der gelöscht werden soll."),
+            dcc.Input(id = "column_deletion_id", type = "text", placeholder = "Spaltenname", value = None),
+            
             html.Div(id = 'output')
         ]) 
 
@@ -138,8 +164,9 @@ def render_content(tab):
 #     return f"You entered: {values}, {n_clicks}"
 
 def save_data(values, n_clicks):
+    return "Bitte Daten eingeben."
     if n_clicks == None:
-        return "Bitte Daten eingeben."
+        return f"Bitte Daten eingeben.{values}"
     #field "Bild_ID" must not be empty
     elif values[db_df.columns.get_loc("Bild_ID")] is None:
         return 'Das Feld "Bild_ID" darf nicht leers sein.'
@@ -148,6 +175,16 @@ def save_data(values, n_clicks):
         db_df.loc[len(db_df)] = values
         db_df.to_csv(database_path, index = "ID", sep = ";")
         return "Daten gespeichert!"
+    
+# @callback(
+#     Output('output', 'children'),
+#     Input("column_deletion_id", "value"),
+#     Input("column_addition_id", "value"),
+#     Input("column_deletion_id", "value"),
+#     )
+    
+# def printData(value1, value2, value3):
+#     return f"{value1}, {value2}, {value3}"
 
 #run the app
 if __name__ == "__main__":
