@@ -8,6 +8,7 @@ Updated:    17.08.2025
 #https://realpython.com/python-dash/#style-your-dash-application
 #https://dash.plotly.com/dash-core-components/tabs (for the tabs)
 #https://dash.plotly.com/basic-callbacks for callbacks like INPUT, OUTPUT and STATE
+#https://www.w3schools.com/css/css_comments.asp about CSS components
 #start the dash Dashboard:
 #   - open CMD
 #   - activate python environment
@@ -67,26 +68,43 @@ def loadTable(database_path):
     return db_df, list_of_dict
 
 
+#define a style sheet
+external_stylesheets = [
+    {
+        "href": (
+            "https://fonts.googleapis.com/css2?"
+            "family=Lato:wght@400;700&display=swap"
+        ),
+        "rel": "stylesheet",
+    },
+]
 #start a dash instance
 # suppress_callback_exceptions=True -> the line "html.Button('Speichern', id='save_button')"
 # is only in the second tab, however, dash expect it to be in the initial setup
 # which would lead to the creation of the save button in every tab. The option
 # allows elements to not be loaded immediately
-app = Dash(__name__, suppress_callback_exceptions=True)
+app = Dash(__name__, suppress_callback_exceptions=True, external_stylesheets=external_stylesheets)
+
+app.title = "PlantDB"
 
 #set the style of the webpage
 #html.Div -> create a new division
 app.layout = html.Div([
+    html.Div(className = "header", children = [
     #primary heading
-    html.H1(children="PlantDB"),
+    html.P(children = "🌿", className = "header-emoji"),
+    html.H1(children="PlantDB", className = "header-title"),
+    html.P(children = ("Open Source Pflanzen-Datenbank"), className = "header-description")
+    ]),
     #introduce tabs
-    dcc.Tabs(id = "tabs", value = "tab_table", children=[
-        dcc.Tab(label="Tabelle", value = "tab_table"),
-        dcc.Tab(label="Datenänderung", value = "tab_datainput"),
+    html.Div(className = "sub-header", children = [
+        dcc.Tabs(id = "tabs", value = "tab_table", children = [
+            dcc.Tab(label="Tabelle", value = "tab_table", className='tab-style', selected_className='selected-tab-style'),
+            dcc.Tab(label="Datenänderung", value = "tab_datainput", className='tab-style', selected_className='selected-tab-style'),
         ]),
         html.Div(id="database"),
         html.Div(id="content")
-    ])
+    ])])
 
 #controls the tabs, based on user input
 @callback(
@@ -112,15 +130,10 @@ def render_content(tab):
     
     #tab 1
     if tab == 'tab_table':
-        return html.Div([
-            html.H1(children="Pflanzentabelle"),
+        return html.Div(className = "sub-header", children = [
+            html.H1(children = "Pflanzentabelle", className = "sub-header"),
             #add a paragraph
-            html.P(
-                children=(
-                    "Analyze the behavior of avocado prices and the number"
-                    " of avocados sold in the US between 2015 and 2018"
-                ),
-            ),
+            html.P(children = ("Datenübersicht und Filterung"),),
             #https://dash.plotly.com/datatable
             dash_table.DataTable( 
                 id = "datatable",
@@ -139,6 +152,8 @@ def render_content(tab):
         return html.Div([
             #data row input GUI
             #-------------------
+            html.H1("Daten ändern", className = "sub-header"),
+            html.P(children = ("Zeilen anfügen oder löschen")),
             html.H3("Zeile hinzufügen"),
             html.P("Bitte die Daten eingeben, die hinzugefügt werden sollen. Die Spalte 'Bild_ID' ist ein Pflichtfeld."),
             #list comprehension for each column in the df to dynamically depict 
