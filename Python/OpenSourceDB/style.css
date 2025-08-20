@@ -1,0 +1,88 @@
+/* logic of elements like "right": https://www.w3schools.com/cssref/pr_pos_right.php*/
+
+body {
+    font-family: "Lato", sans-serif;
+    margin: 0;
+    background-color: #81ad8ee8;
+}
+
+.header {
+    background-color: #222222;
+    height: 120px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.header-title {
+    color: #FFFFFF;
+    font-size: 48px;
+    font-weight: bold;
+    text-align: center;
+    margin: 0 auto;
+}
+
+.header-description {
+    color: #CFCFCF;
+    margin: 4px auto;
+    text-align: center;
+    /*column-count: 2; */
+    /*column-gap: 2em; *//* Abstand zwischen den Spalten */
+    max-width: 384px;
+}
+
+.sub-header{
+    color: #222222;
+    margin: 2px auto;
+    text-align: left;
+    padding-bottom: 20px;
+    padding-left: 5px;
+    padding-right: 5px;
+    /*max-width: 384px;*/
+}
+
+.tab-style {
+    background-color: #7c7c7c !important;
+    color: white !important;
+}
+
+.selected-tab-style {
+    background-color: #222222 !important;
+    color: white !important;
+    font-weight: bold;
+}
+
+.wrapper {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 1024px;
+    padding-right: 10px;
+    padding-left: 10px;
+    margin-top: 32px;
+}
+
+.card {
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px 0 rgba(0, 0, 0, 0.18);
+}
+
+.column {
+    display: flex;              /* Zeile als flexibler Container */
+    align-items: center;        /* Vertikale Zentrierung optional */
+    justify-content: center;    /* Zentriert die gesamten Inhalte */
+    position: relative;         /* Für absolute Positionierung des rechten Blocks */
+}
+
+.text-center {
+    flex: 1;                   /* Nimmt den verfügbaren Platz ein */
+    text-align: center;        /* Text innerhalb zentrieren */
+    color: #CFCFCF;
+    margin: 4px auto;
+}
+
+.text-right {
+    position: absolute;         /* Positionierung relativ zum Container */
+    right: 15px;                   /* Am rechten Rand */
+    color: #CFCFCF;
+    margin: 4px auto;
+}
