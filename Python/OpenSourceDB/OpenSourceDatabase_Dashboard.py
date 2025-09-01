@@ -66,8 +66,8 @@ def loadTable(database_path):
     return db_df, list_of_dict_db
 
 
-#define a style sheet
-#---------------------
+#define a style sheet (text style)
+#----------------------------------
 #source: https://fonts.google.com/specimen/Mozilla+Headline
 external_stylesheets = [
     {
@@ -98,19 +98,19 @@ app.layout = html.Div([
         html.Div([
             #add a paragraph
             html.P(children = ("Open Source Pflanzen-Datenbank"), className = "text-center", style = {'font-family': 'Mozilla Headline, sans-serif'}),
-            html.A("📃 Anleitung", href="/assets/Anleitung_PlantDB.pdf", target="_blank", className = "text-right", style = {'font-family': 'Mozilla Headline, sans-serif'})
+            html.A("📃 Anleitung", href="/assets/Anleitung_PlantDB.pdf", target="_blank", className = "text-right", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(100, 154, 117)'})
         ], className = "column"),
         html.Div([
             #keep the center empty
             html.P("", className = "text-center"),
-            html.P("Created by Benno 2025", className = "text-right", style = {'font-family': 'Mozilla Headline, sans-serif', 'margin-top': '10px'})
+            html.P("Created by Benno 2025", className = "text-right", style = {'font-family': 'Mozilla Headline, sans-serif', 'margin-top': '10px', 'color': 'rgb(100, 154, 117)'})
         ], className = "column")
     ]),
     #introduce tabs
-    html.Div(className = "sub-header", children = [
+    html.Div(className = "sub-header1", children = [
         dcc.Tabs(id = "tabs", value = "tab_table", children = [
-            dcc.Tab(label="Tabelle", value = "tab_table", className="tab-style", selected_className = "selected-tab-style", style = {'font-family': 'Mozilla Headline, sans-serif'}),
-            dcc.Tab(label="Datenänderung", value = "tab_datainput", className="tab-style", selected_className = "selected-tab-style", style = {'font-family': 'Mozilla Headline, sans-serif'}),
+            dcc.Tab(label="Tabelle", value = "tab_table", className="tab-style", selected_className = "selected-tab-style", style = {'font-family': 'Mozilla Headline, sans-serif'}), #color can not be changed here, overwritte by CSS
+            dcc.Tab(label="Datenänderung", value = "tab_datainput", className="tab-style", selected_className = "selected-tab-style", style = {'font-family': 'Mozilla Headline, sans-serif'}), #color can not be changed here, overwritte by CSS
         ]),
         html.Div(id = "database"),
         html.Div(id = "content")
@@ -137,8 +137,8 @@ def render_content(tab):
     if tab == "tab_table":
         return html.Div([
                     html.Div([
-                        html.H1(children = "Datenübersicht und Filterung", style = {'font-family': 'Mozilla Headline, sans-serif'})
-                    ], className = "sub-header"),
+                        html.H1(children = "Datenübersicht und Filterung", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(100, 154, 117)'})
+                    ], className = "sub-header2"),
                     html.Div([
                         #https://dash.plotly.com/datatable
                         #https://dash.plotly.com/datatable/style
@@ -146,8 +146,9 @@ def render_content(tab):
                             id = "datatable",
                             data = list_of_dict_db,
                             #add id column manually
-                            style_header = {'fontWeight': 'bold', 'backgroundColor': 'rgb(124, 124, 124)','color': 'rgb(236, 236, 232)', "textAlign": "center", "fontSize": "18px"},
+                            style_header = {'fontWeight': 'bold', 'backgroundColor': 'rgb(58, 88, 67)','color': 'rgb(236, 236, 232)', "textAlign": "center", "fontSize": "18px"},
                             columns = [{"name": "Zeilennummer", "id": "Zeilennummer", "presentation": "markdown"}] + [{"name": col, "id": col, "presentation": "markdown"} for col in db_df.columns],
+                            fixed_rows = {'headers': True, "data": 0}, #fixate header row
                             #one column different from the others
                             #style_data_conditional=[{
                             #    "if": {"column_id": "Zeilennummer"},   # 3. Zeile (Index 2)
@@ -156,25 +157,28 @@ def render_content(tab):
                             #    "height": "50px",
                             #    "textAlign": "center"
                             #}],
-                            style_cell = {"minHeight": "30px", "height": "auto", "lineHeight": "15px", "textAlign": "center", 'verticalAlign': 'middle', 'backgroundColor': 'rgb(236, 236, 232)'},
+                            style_cell = {"minHeight": "30px", "height": "auto", "lineHeight": "15px", "textAlign": "center", 'verticalAlign': 'middle', 'backgroundColor': 'rgb(34, 37, 34)', 'color': 'rgb(236, 236, 232)'},
                             filter_action = "native",
-                            style_table = {"overflowX": "scroll"},
+                            style_table = {"overflowX": "scroll", 'heigth' : '90vh', 'maxHeight': '90vh', 'display': 'auto'},
                             style_data = {"whiteSpace": "normal", "height": "auto"},
+                            style_cell_conditional=[{'if': {'column_id': "Zeilennummer"}, 'width': '130px'}], #first column is smaller (for some reasons)
+                            #table should fill full screen
+                            css = [{"selector": "table", "rule": "width: 100%;"},{"selector": ".dash-spreadsheet.dash-freeze-top, .dash-spreadsheet .dash-virtualized", "rule": "max-height: 1000px;"}],
                             markdown_options = {"html": True}
                         )
-                    ])
+                    ], className = "sub-header1")
         ])
     #tab 2
     elif tab == "tab_datainput":
         return html.Div([
                     html.Div([
-                        html.H1(children = "Zeilen anfügen oder löschen", style = {'font-family': 'Mozilla Headline, sans-serif'})
-                    ], className = "sub-header"),
+                        html.H1(children = "Zeilen anfügen oder löschen", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(100, 154, 117)'})
+                    ], className = "sub-header2"),
                     html.Div([
                         #data row input GUI
                         #-------------------
-                        html.H2("Pflanze einsetzen", style = {'font-family': 'Mozilla Headline, sans-serif'}),
-                        html.P('Bitte die Daten eingeben, die hinzugefügt werden sollen.', style = {'font-family': 'Mozilla Headline, sans-serif'}),
+                        html.H2("Pflanze einsetzen", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
+                        html.P('Bitte die Daten eingeben, die hinzugefügt werden sollen.', style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
                         #list comprehension for each column in the df to dynamically depict 
                         # df input fields
                         html.Div([
@@ -193,8 +197,9 @@ def render_content(tab):
                         
                         #row deletion GUI
                         #----------------
-                        html.H2("Pflanze kompostieren", style = {'font-family': 'Mozilla Headline, sans-serif'}),
-                        html.P("Bitte die Zeilennummer der Zeile eingeben, die gelöscht werden soll.", style = {'font-family': 'Mozilla Headline, sans-serif'}),
+                        html.Br(),
+                        html.H2("Pflanze kompostieren", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
+                        html.P("Bitte die Zeilennummer der Zeile eingeben, die gelöscht werden soll.", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
                         html.Div([
                             dcc.Input(id = "row_deletion_id", type = "text", placeholder = "Zeilen ID", value = None, style = {'margin-bottom': '10px'})
                         ]),
@@ -215,7 +220,7 @@ def render_content(tab):
                         # html.P("Bitte den Spaltennamen angeben, der gelöscht werden soll."),
                         # dcc.Input(id = "column_deletion_id", type = "text", placeholder = "Spaltenname", value = None),
                         # html.Div(id = "output4")
-                    ])
+                    ], className = "sub-header2")
         ]) 
 
 #data row input processing
@@ -246,7 +251,7 @@ def save_data(values:list, btn1_clicks:int) -> str:
     
     #initial setup
     if btn1_clicks == 0:
-        return "Bitte Daten eingeben.", 0
+        return html.P("Bitte Daten eingeben.", style = {'color': 'rgb(207, 207, 207)'}), 0
     #at least one value must be entered
     elif btn1_clicks > 0 and values != [None for i in range(len(values))]:
         #Bild_Name input (picture name) to valid path
@@ -260,7 +265,7 @@ def save_data(values:list, btn1_clicks:int) -> str:
         #append list as last row to df and export to csv
         db_df.loc[len(db_df)] = values
         db_df.to_csv(database_path, index = "Zeilennummer", sep = ";")
-        return "Zeile hinzugefügt!", 0
+        return html.P("Zeile hinzugefügt!", style = {'color': 'rgb(207, 207, 207)'}), 0
 
 #data row deletion processing
 #-------------------------
@@ -284,15 +289,15 @@ def deleteRow(value:list, btn2_clicks:int) -> str:
     db_df, list_of_dict_db = loadTable(database_path = database_path)
     
     if btn2_clicks == 0:
-        return "Bitte Zeilen-ID eingeben, die gelöscht werden soll.", 0
+        return html.P("Bitte Zeilen-ID eingeben, die gelöscht werden soll.", style = {'color': 'rgb(207, 207, 207)'}), 0
     elif btn2_clicks > 0 and value is None:
-        return "Bitte eine valide Zahl eingeben.", 0
+        return html.P("Bitte eine valide Zahl eingeben.", style = {'color': 'rgb(207, 207, 207)'}), 0
     elif btn2_clicks > 0 and not value.isdigit():
-        return "Bitte eine valide Zahl eingeben.", 0
+        return html.P("Bitte eine valide Zahl eingeben.", style = {'color': 'rgb(207, 207, 207)'}), 0
     elif btn2_clicks > 0 and value.isdigit():
         db_df = db_df.drop(index = int(value))
         db_df.to_csv(database_path, index = "Zeilennummer", sep = ";")
-        return "Zeile gelöscht!", 0
+        return html.P("Zeile gelöscht!", style = {'color': 'rgb(207, 207, 207)'}), 0
 
 #TODO: Not yet implemented.
 # #data column addition processing
@@ -316,4 +321,4 @@ def deleteRow(value:list, btn2_clicks:int) -> str:
     
 #run the app
 if __name__ == "__main__":
-    app.run(debug = False) #TODO: set to True, if in development or debug
+    app.run(debug = True) #TODO: set to True, if in development or debug

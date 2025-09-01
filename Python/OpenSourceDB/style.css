@@ -3,7 +3,7 @@
 body {
     font-family: "Lato", sans-serif;
     margin: 0;
-    background-color: #81ad8ee8;
+    background-color: #3F3F3F;
 }
 
 .header {
@@ -31,13 +31,22 @@ body {
     max-width: 384px;
 }
 
-.sub-header{
+.sub-header1{
+    color: #222222;
+    margin: 2px auto;
+    text-align: center;
+    padding-bottom: 0px;
+    padding-left: 0px;
+    padding-right: 0px;
+    /*max-width: 384px;*/
+}
+.sub-header2{
     color: #222222;
     margin: 2px auto;
     text-align: left;
     padding-bottom: 20px;
     padding-left: 5px;
-    padding-right: 5px;
+    padding-right: 0px;
     /*max-width: 384px;*/
 }
 
@@ -85,4 +94,15 @@ body {
     right: 15px;                   /* Am rechten Rand */
     color: #CFCFCF;
     margin: 4px auto;
+}
+
+/* Target the filter inputs in Dash DataTable */
+div .dash-filter input {
+    color: #CFCFCF !important;
+    background-color: #222222 !important;
+}
+
+/* Change filter input placeholder color */
+div .dash-filter input::placeholder {
+    color: #CFCFCF !important;
 }
