@@ -34,13 +34,17 @@ Updated:    20.08.2025
 #---------
 import pandas as pd
 import os
-from dash import Dash, Input, Output, dcc, html, dash_table, callback, ALL
+from dash import Dash, Input, Output, dcc, html, dash_table, callback, ALL, State, no_update
 
 #load paths
 #-----------
 base_path = os.path.dirname(__file__)
+base_path = r"C:\Users\tamta\Documents\Freizeit\Geschenke\2025_Toms_Pflanzendatenbank"
 database_path = os.path.join(base_path, "openDB.csv")
-    
+
+#basic data
+#----------
+current_values = []
 def loadTable(database_path):
     """
     Load the table from CSV from disk.
@@ -65,6 +69,7 @@ def loadTable(database_path):
 
     return db_df, list_of_dict_db
 
+db_df, list_of_dict_db = loadTable(database_path = database_path)
 
 #define a style sheet (text style)
 #----------------------------------
@@ -182,13 +187,13 @@ def render_content(tab):
                         #list comprehension for each column in the df to dynamically depict 
                         # df input fields
                         html.Div([
-                        #on inputs: https://dash.plotly.com/dash-core-components/input
-                        dcc.Input(id = {"type" : "dynamic_input", "index" : df_col}, 
-                                    type = "text", 
-                                    placeholder = f"{df_col}",
-                                    value = None,
-                                    style = {'margin-bottom': '10px'})
-                            for df_col in db_df.columns if df_col != "Zeilennummer"
+                            #on inputs: https://dash.plotly.com/dash-core-components/input
+                            dcc.Input(id = {"type" : "dynamic_input", "index" : df_col}, 
+                                        type = "text", 
+                                        placeholder = f"{df_col}",
+                                        value = None,
+                                        style = {'margin-bottom': '10px'})
+                                for df_col in db_df.columns
                         ]),
                         
                         #save button
@@ -204,22 +209,43 @@ def render_content(tab):
                             dcc.Input(id = "row_deletion_id", type = "text", placeholder = "Zeilen ID", value = None, style = {'margin-bottom': '10px'})
                         ]),
                         #about buttons: https://dash.plotly.com/dash-html-components/button
-                        html.Button("Zeile entfernen", id = "save_button_row_deletion", n_clicks=0, style = {'font-family': 'Mozilla Headline, sans-serif'}),
-                        html.Div(id = "output2")
+                        html.Button("Zeile entfernen", id = "save_button_row_deletion", n_clicks = 0, style = {'font-family': 'Mozilla Headline, sans-serif'}),
+                        html.Div(id = "output2"),
                         
+                        #load and adjust given row by id
+                        #---------------------------------
+                        html.Br(),
+                        html.H2("Pflanze umtopfen", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
+                        html.P("Bitte die Zeile eingeben, die bearbeitet werden soll.", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
+                        html.Div([
+                            dcc.Input(id = "row-adjustment-id", type = "text", placeholder = "Zeilen ID", value = None, style = {'margin-bottom': '10px'})
+                        ]),
+                        html.Button("Daten laden", id = "load_button", n_clicks = 0, style = {'font-family': 'Mozilla Headline, sans-serif'}),
+                        html.P("Aktuelle Daten der Zeile.", style = {'font-family': 'Mozilla Headline, sans-serif', 'color': 'rgb(207, 207, 207)'}),
+                        html.Div([
+                            dcc.Input(id = df_col, 
+                                      type = "text", 
+                                      placeholder = f"{df_col}",
+                                      value = None,
+                                      style = {'margin-bottom': '10px'})
+                            for df_col in db_df.columns.to_list()                       
+                        ]),
+                        html.Button('Speichern', id='save-button'),
+                        html.Div(id = "output3"),
+
                         # #column add GUI
                         # #---------------
                         # html.H3("Spalte hinzufügen"),
                         # html.P("Bitte den neu hinzuzufügenden Feldnamen angeben."),
                         # dcc.Input(id = "column_addition_id", type = "text", placeholder = "Spaltenname", value = None),
-                        # html.Div(id = "output3"),
+                        # html.Div(id = "output4"),
                         
                         # #column deletion GUI
                         # #--------------------
                         # html.H3("Spalte löschen"),
                         # html.P("Bitte den Spaltennamen angeben, der gelöscht werden soll."),
                         # dcc.Input(id = "column_deletion_id", type = "text", placeholder = "Spaltenname", value = None),
-                        # html.Div(id = "output4")
+                        # html.Div(id = "output5")
                     ], className = "sub-header2")
         ]) 
 
@@ -263,12 +289,17 @@ def save_data(values:list, btn1_clicks:int) -> str:
                 values[db_df.columns.get_loc("Bild_Name")] = f'<img src="/assets/{values[db_df.columns.get_loc("Bild_Name")]}.jpg" height="100">'
         #final setup: "<img src="/assets/1_Gänseblümchen.jpg" height="100">"
         #append list as last row to df and export to csv
-        db_df.loc[len(db_df)] = values
+        df_header = list(db_df.columns.values)
+        #values = ['yy', 'yy', 'yy', 'yy', 'yy', 'yy']
+        new_data = pd.DataFrame(data = {k:v for (k,v) in zip(df_header, values)}, index = [db_df.index.max()+1])
+        #db_df.loc[len(db_df)] = values
+        db_df = pd.concat([db_df, new_data])
+
         db_df.to_csv(database_path, index = "Zeilennummer", sep = ";")
         return html.P("Zeile hinzugefügt!", style = {'color': 'rgb(207, 207, 207)'}), 0
 
 #data row deletion processing
-#-------------------------
+#-----------------------------
 @app.callback(
     Output("output2", "children"),
     Output("save_button_row_deletion", "n_clicks"), #reset the button, everytime it was clicked by returnin 0 as a second value, reassigning it to n_clicks
@@ -299,25 +330,88 @@ def deleteRow(value:list, btn2_clicks:int) -> str:
         db_df.to_csv(database_path, index = "Zeilennummer", sep = ";")
         return html.P("Zeile gelöscht!", style = {'color': 'rgb(207, 207, 207)'}), 0
 
+#adjust data of a given row by id
+#----------------------------------
+#load given row
+#- - - - - - - - 
+@app.callback(     
+    [Output(df_col, "value") for df_col in db_df.columns],
+    #[Output('name-ger', 'value'),
+    # Output('name-lat', 'value')],
+    Input('load_button', 'n_clicks'),
+    State('row-adjustment-id', 'value')
+)
+#About the logical break between row-adjustment-id and row_adjustment_id:
+# „row-index“ ist der Wert der ID eines Dash-Komponenten-Elements im HTML/Frontend (z.B. dcc.Input(id='row-index', ...)) – hier wird der Bindestrich (dash) benutzt. Dash-Komponenten-IDs folgen meist dem sogenanntem „kebab-case“-Format (kleinbuchstaben mit Bindestrichen). Das entspricht HTML- und CSS-Konventionen.
+# „row_index“ hingegen ist ein Python-Variablenname in der Callback-Funktion. Im Python-Code werden nur Unterstriche (_) verwendet, da Bindestriche in Variablennamen nicht erlaubt sind (Bindestrich gilt als Minus-Operator in Python).
+# Dash verbindet im Callback automatisch die Komponente mit der ID „row-index“ mit dem Callback-Parameter, der row_index heißt. Der Name des Callback-Funktionsparameters kann beliebig gewählt werden und muss nur in der richtigen Reihenfolge zu den Inputs/States passen. Dash macht die Zuordnung basierend auf der Reihenfolge, nicht anhand des Namens.
+# https://community.plotly.com/t/newbie-finds-naming-snobbish/33416
+def load_row(n_clicks, row_adjustment_id):
+    
+    #freshly load the data
+    db_df, list_of_dict_db = loadTable(database_path = database_path)
+    if row_adjustment_id is not None:
+        row_adjustment_id = int(row_adjustment_id) 
+    if n_clicks is None or row_adjustment_id is None or row_adjustment_id >= len(db_df) or row_adjustment_id < 0:
+        return [""]*len(db_df.columns.to_list())#'', ''
+    else:
+        row = db_df.iloc[row_adjustment_id]
+        return [row[f"{i}"] for i in db_df.columns.to_list()] #row["Name_Deutsch"], row['Name_Lateinisch']
+
+#save changed row
+#- - - - - - - - - -
+@app.callback(
+    Output("output3", "children"),
+    Output('row-adjustment-id', 'value'),  # Nur als Beispiel, um Interaktion zu zeigen
+    Input('save-button', 'n_clicks'),
+    Input('row-adjustment-id', 'value'),#State('row-adjustment-id', 'value'),
+    State({'type': 'dynamic-input', 'index': ALL}, 'value')#[State(df_col, "value") for df_col in db_df.columns]
+)
+def save_row(n_clicks, row_adjustment_id, values):
+    if row_adjustment_id is not None:
+        row_adjustment_id = int(row_adjustment_id)
+    if n_clicks and row_adjustment_id is not None and 0 <= row_adjustment_id < len(db_df):
+        ###################################
+        #Bild_Name input (picture name) to valid path
+        if values[db_df.columns.get_loc("Bild_Name")] != None:
+            #add .jpg if it was not provided
+            if values[db_df.columns.get_loc("Bild_Name")].endswith(".jpg"):
+                values[db_df.columns.get_loc("Bild_Name")] = f'<img src="/assets/{values[db_df.columns.get_loc("Bild_Name")]}" height="100">'
+            else:
+                values[db_df.columns.get_loc("Bild_Name")] = f'<img src="/assets/{values[db_df.columns.get_loc("Bild_Name")]}.jpg" height="100">'
+        #final setup: "<img src="/assets/1_Gänseblümchen.jpg" height="100">"
+        #append list as last row to df and export to csv
+        df_header = list(db_df.columns.values)
+        #values = ['yy', 'yy', 'yy', 'yy', 'yy', 'yy']
+        new_data = pd.DataFrame(data = {k:v for (k,v) in zip(df_header, values)}, index = [db_df.index.max()+1])
+        #db_df.loc[len(db_df)] = values
+        db_df.iloc[row_adjustment_id] = new_data
+        db_df.to_csv(database_path, index = "Zeilennummer", sep = ";")
+        ##########################################
+        #for col, val in zip(db_df.columns, values):
+        #    db_df.at[row_adjustment_id, col] = val
+        # Hier kann auch ein persistenter Speicher aktualisiert werden
+        return "Saved", ""
+    return str(values), no_update
+
 #TODO: Not yet implemented.
 # #data column addition processing
 # #------------------------------
 # @app.callback(
-#     Output("output3", "children"),
+#     Output("output4", "children"),
 #     Input("column_addition_id", "value")
 # )
 # def columnAddition(value):
-    
-#     return f"Output 3: {value}"
+#     return f"Output 4: {value}"
 
 # #data column deletion processing
 # #--------------------------------
 # @app.callback(
-#     Output("output4", "children"),
+#     Output("output5", "children"),
 #     Input("column_deletion_id", "value")
 # )
 # def update_output_4(value):
-#     return f"Output 4: {value}"
+#     return f"Output 5: {value}"
     
 #run the app
 if __name__ == "__main__":
